@@ -1,0 +1,10 @@
+BandOfJellyfish.ogg
+3xBlast, "A Band of Jellyfish (Looped)", OpenGameArt.org
+CC0; source: https://opengameart.org/content/7-pop-punk-chiptune-tracks
+
+Shoot.wav, Hit.wav, ZombieDeath.wav, GameOver.wav
+Generated for this game with jsfxr: https://sfxr.me/
+
+Sprites
+Kenney, Topdown (Shooter) Pack, CC0
+https://kenney.nl/assets/top-down-shooter

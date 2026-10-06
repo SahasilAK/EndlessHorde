@@ -15,6 +15,13 @@ public class Health : MonoBehaviour
         Current = maxHealth;
     }
 
+    public void SetMaxHealth(int value)
+    {
+        maxHealth = Mathf.Max(1, value);
+        Current = maxHealth;
+        IsDead = false;
+    }
+
     public void TakeDamage(int amount)
     {
         if (IsDead || amount <= 0)

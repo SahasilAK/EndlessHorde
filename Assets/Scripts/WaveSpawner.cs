@@ -33,11 +33,16 @@ public class WaveSpawner : MonoBehaviour
             for (int i = 0; i < zombieCount; i++)
             {
                 ZombieAI zombie = Instantiate(zombiePrefab, GetSpawnPosition(), Quaternion.identity);
+                zombie.ConfigureVariant(Random.Range(0, 100) < 15
+                    ? ZombieAI.Variant.FastWeak
+                    : Random.Range(0, 100) < 18
+                        ? ZombieAI.Variant.SlowTough
+                        : ZombieAI.Variant.Normal);
                 zombie.SetSpeedMultiplier(speedMultiplier);
                 yield return new WaitForSeconds(spawnDelay);
             }
 
-            while (FindFirstObjectByType<ZombieAI>() != null)
+            while (FindAnyObjectByType<ZombieAI>() != null)
             {
                 yield return null;
             }

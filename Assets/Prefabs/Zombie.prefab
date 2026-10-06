@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 6019453725058403666, guid: 79e3e86215a8e3641b29defa7d9fb8d7, type: 3}
   m_Color: {r: 0.3, g: 0.85, b: 0.35, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -187,3 +187,7 @@ MonoBehaviour:
   moveSpeed: 2
   touchDamage: 10
   damageCooldown: 1
+  pickupDropChance: 0.25
+  normalSprite: {fileID: 6019453725058403666, guid: 79e3e86215a8e3641b29defa7d9fb8d7, type: 3}
+  fastSprite: {fileID: -2343693395358084441, guid: 81083f166cd4e82458d247ea3eed78b0, type: 3}
+  toughSprite: {fileID: 4326872430171513394, guid: 128ac3a14804cc047b69fe3d4ded09cc, type: 3}

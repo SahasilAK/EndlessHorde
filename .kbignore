@@ -1,0 +1,12 @@
+Library
+Temp
+Logs
+Build
+UserSettings
+.utmp
+obj
+*.csproj
+*.sln
+*.slnx
+*.meta
+Packages/packages-lock.json
