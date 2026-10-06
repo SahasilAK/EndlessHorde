@@ -227,7 +227,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -10
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 3810559315073561765, guid: 7a035496b8589cf4096a75285d642013, type: 3}
+  m_Sprite: {fileID: -211772222417063090, guid: e606100b8e8e1fc4fbc4800412419e01, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1931,6 +1931,8 @@ MonoBehaviour:
   firePoint: {fileID: 438601506}
   bulletPrefab: {fileID: 4514509425353892707, guid: b24c17990714b0540bc45f9194250f4b, type: 3}
   fireCooldown: 0.2
+  damageInvulnerabilityDuration: 1
+  regenerationInterval: 5
 --- !u!58 &940152132
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -2043,7 +2045,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2311659948842064771, guid: ee52928e9d12b4748ada7b50f6f3f246, type: 3}
+  m_Sprite: {fileID: 6824764180905605030, guid: 59ae8701213fc9544917ee3d6e9b715e, type: 2}
   m_Color: {r: 0.25, g: 0.68, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -2209,9 +2211,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
   zombiePrefab: {fileID: 4764242465088638495, guid: b6a6ce8a66c4aee4a83d68dc34c2d72c, type: 3}
-  firstWaveSize: 5
-  timeBetweenWaves: 3
-  spawnDelay: 0.35
+  firstWaveSize: 1
+  timeBetweenWaves: 0.1
+  spawnDelay: 0.05
   speedIncreasePerWave: 0.1
   spawnPadding: 1
   waveText: {fileID: 486777556}

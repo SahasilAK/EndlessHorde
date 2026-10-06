@@ -12,41 +12,72 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private TMPro.TMP_Text waveText;
 
     private Camera mainCamera;
+    private GameManager gameManager;
     private int wave;
 
     private void Start()
     {
         mainCamera = Camera.main;
+        gameManager = FindAnyObjectByType<GameManager>();
         StartCoroutine(SpawnWaves());
     }
 
     private IEnumerator SpawnWaves()
     {
-        while (true)
+        while (!gameManager.IsGameOver)
         {
             wave++;
-            waveText.text = $"Wave {wave}";
+            bool bossWave = wave % 5 == 0;
+            waveText.text = bossWave ? $"Wave {wave} - BOSS" : $"Wave {wave}";
             yield return new WaitForSeconds(timeBetweenWaves);
 
             int zombieCount = firstWaveSize + wave - 1;
             float speedMultiplier = 1f + (wave - 1) * speedIncreasePerWave;
             for (int i = 0; i < zombieCount; i++)
             {
-                ZombieAI zombie = Instantiate(zombiePrefab, GetSpawnPosition(), Quaternion.identity);
-                zombie.ConfigureVariant(Random.Range(0, 100) < 15
-                    ? ZombieAI.Variant.FastWeak
-                    : Random.Range(0, 100) < 18
-                        ? ZombieAI.Variant.SlowTough
-                        : ZombieAI.Variant.Normal);
-                zombie.SetSpeedMultiplier(speedMultiplier);
+                SpawnZombie(speedMultiplier);
                 yield return new WaitForSeconds(spawnDelay);
             }
 
-            while (FindAnyObjectByType<ZombieAI>() != null)
+            if (bossWave)
+            {
+                ZombieAI boss = Instantiate(zombiePrefab, GetSpawnPosition(), Quaternion.identity);
+                boss.ConfigureBoss(wave);
+                boss.SetSpeedMultiplier(speedMultiplier);
+            }
+
+            while (FindAnyObjectByType<ZombieAI>() != null && !gameManager.IsGameOver)
             {
                 yield return null;
             }
+
+            if (gameManager.IsGameOver)
+            {
+                yield break;
+            }
+
+            Health playerHealth = gameManager.Player.GetComponent<Health>();
+            playerHealth.Heal(playerHealth.Max);
+            Time.timeScale = 0f;
+            bool skillChosen = false;
+            gameManager.ShowSkillChoices(PlayerController.RollUpgradeChoices(3), upgrade =>
+            {
+                gameManager.Player.GetComponent<PlayerController>().ApplyUpgrade(upgrade);
+                skillChosen = true;
+            });
+            yield return new WaitUntil(() => skillChosen || gameManager.IsGameOver);
         }
+    }
+
+    private void SpawnZombie(float speedMultiplier)
+    {
+        ZombieAI zombie = Instantiate(zombiePrefab, GetSpawnPosition(), Quaternion.identity);
+        zombie.ConfigureVariant(Random.Range(0, 100) < 15
+            ? ZombieAI.Variant.FastWeak
+            : Random.Range(0, 100) < 18
+                ? ZombieAI.Variant.SlowTough
+                : ZombieAI.Variant.Normal);
+        zombie.SetSpeedMultiplier(speedMultiplier);
     }
 
     private Vector2 GetSpawnPosition()

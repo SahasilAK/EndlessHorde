@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 6019453725058403666, guid: 79e3e86215a8e3641b29defa7d9fb8d7, type: 3}
+  m_Sprite: {fileID: -2642173997754711019, guid: 0c177ede13ebb7440a1210a551bf7ec5, type: 2}
   m_Color: {r: 0.3, g: 0.85, b: 0.35, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -185,9 +185,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieAI
   moveSpeed: 2
-  touchDamage: 10
+  touchDamage: 1
   damageCooldown: 1
   pickupDropChance: 0.25
-  normalSprite: {fileID: 6019453725058403666, guid: 79e3e86215a8e3641b29defa7d9fb8d7, type: 3}
-  fastSprite: {fileID: -2343693395358084441, guid: 81083f166cd4e82458d247ea3eed78b0, type: 3}
-  toughSprite: {fileID: 4326872430171513394, guid: 128ac3a14804cc047b69fe3d4ded09cc, type: 3}
+  normalSprite: {fileID: -2642173997754711019, guid: 0c177ede13ebb7440a1210a551bf7ec5, type: 2}
+  fastSprite: {fileID: 5410019196950533429, guid: 63a5a7df6f56e5d4393851e485e50266, type: 2}
+  toughSprite: {fileID: 7621574177981149807, guid: c118f38e3d0bfcf4fa0cea289ce0d8b0, type: 2}
+  bossSprite: {fileID: -8034063004486326518, guid: 0d150252e35ab594cb7c4cb2754f82cb, type: 2}

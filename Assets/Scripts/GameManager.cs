@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -32,6 +33,9 @@ public class GameManager : MonoBehaviour
     private int previousPlayerHealth = -1;
     private bool gameStarted;
     private bool isPaused;
+    private bool isChoosingSkill;
+    private GameObject skillSelectionPanel;
+    private Canvas hudCanvas;
 
     private void Awake()
     {
@@ -41,8 +45,8 @@ public class GameManager : MonoBehaviour
             throw new System.InvalidOperationException("TMP Essentials font asset is missing from Resources.");
         }
 
-        Canvas canvas = scoreText.GetComponentInParent<Canvas>();
-        foreach (TMP_Text text in canvas.GetComponentsInChildren<TMP_Text>(true))
+        hudCanvas = scoreText.GetComponentInParent<Canvas>();
+        foreach (TMP_Text text in hudCanvas.GetComponentsInChildren<TMP_Text>(true))
         {
             if (text.font == null)
             {
@@ -55,7 +59,7 @@ public class GameManager : MonoBehaviour
             fallbackImageSprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), new Vector2(.5f, .5f));
         }
 
-        foreach (Image image in canvas.GetComponentsInChildren<Image>(true))
+        foreach (Image image in hudCanvas.GetComponentsInChildren<Image>(true))
         {
             if (image.sprite == null)
             {
@@ -88,7 +92,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (gameStarted && !IsGameOver && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (!isChoosingSkill && gameStarted && !IsGameOver && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             if (isPaused)
             {
@@ -154,6 +158,96 @@ public class GameManager : MonoBehaviour
     public void Quit()
     {
         Application.Quit();
+    }
+
+    public void ShowSkillChoices(PlayerController.Upgrade[] choices, Action<PlayerController.Upgrade> onChosen)
+    {
+        if (choices == null || choices.Length != 3)
+        {
+            throw new ArgumentException("Exactly three skill choices are required.", nameof(choices));
+        }
+
+        if (skillSelectionPanel == null)
+        {
+            skillSelectionPanel = CreateSkillSelectionPanel();
+        }
+
+        skillSelectionPanel.SetActive(true);
+        isChoosingSkill = true;
+        Time.timeScale = 0f;
+
+        RectTransform panel = skillSelectionPanel.GetComponent<RectTransform>();
+        for (int i = 0; i < 3; i++)
+        {
+            int choiceIndex = i;
+            Button button = panel.GetChild(i + 2).GetComponent<Button>();
+            button.GetComponentInChildren<TMP_Text>().text =
+                $"{PlayerController.GetUpgradeTitle(choices[i])}\n\n{PlayerController.GetUpgradeDescription(choices[i])}";
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() =>
+            {
+                skillSelectionPanel.SetActive(false);
+                isChoosingSkill = false;
+                onChosen(choices[choiceIndex]);
+                Time.timeScale = 1f;
+            });
+        }
+    }
+
+    private GameObject CreateSkillSelectionPanel()
+    {
+        GameObject panelObject = new GameObject("Skill Selection", typeof(RectTransform), typeof(Image));
+        panelObject.transform.SetParent(hudCanvas.transform, false);
+        RectTransform panel = panelObject.GetComponent<RectTransform>();
+        panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
+        panel.sizeDelta = new Vector2(1100f, 480f);
+        Image panelImage = panelObject.GetComponent<Image>();
+        panelImage.sprite = fallbackImageSprite;
+        panelImage.color = new Color(.025f, .08f, .09f, .96f);
+
+        CreateSkillText(panel, "Choose a skill", 42f, new Vector2(0f, 165f), new Vector2(950f, 70f), FontStyles.Bold);
+        CreateSkillText(panel, "Wave cleared - full health restored", 24f, new Vector2(0f, 112f), new Vector2(950f, 45f), FontStyles.Normal);
+
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject buttonObject = new GameObject($"Skill Choice {i + 1}", typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(panel, false);
+            RectTransform buttonRect = buttonObject.GetComponent<RectTransform>();
+            buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
+            buttonRect.anchoredPosition = new Vector2((i - 1) * 355f, -35f);
+            buttonRect.sizeDelta = new Vector2(320f, 250f);
+            Image buttonImage = buttonObject.GetComponent<Image>();
+            buttonImage.sprite = fallbackImageSprite;
+            buttonImage.color = new Color(.08f, .38f, .4f, 1f);
+            Button button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = buttonImage;
+            ColorBlock colors = button.colors;
+            colors.highlightedColor = new Color(.12f, .55f, .58f, 1f);
+            colors.pressedColor = new Color(.05f, .27f, .29f, 1f);
+            button.colors = colors;
+            CreateSkillText(buttonRect, "", 25f, Vector2.zero, new Vector2(280f, 210f), FontStyles.Bold);
+        }
+
+        return panelObject;
+    }
+
+    private TMP_Text CreateSkillText(Transform parent, string value, float size, Vector2 position, Vector2 dimensions, FontStyles style)
+    {
+        GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(parent, false);
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = dimensions;
+        TMP_Text text = textObject.GetComponent<TMP_Text>();
+        text.font = scoreText.font;
+        text.text = value;
+        text.fontSize = size;
+        text.fontStyle = style;
+        text.color = Color.white;
+        text.alignment = TextAlignmentOptions.Center;
+        text.raycastTarget = false;
+        return text;
     }
 
     private void UpdateScoreText()

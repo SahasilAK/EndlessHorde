@@ -16,11 +16,22 @@ public class Pickup : MonoBehaviour
     {
         type = pickupType;
         SpriteRenderer sprite = GetComponent<SpriteRenderer>();
-        if (sprite.sprite == null)
+        Sprite retroSprite = Resources.Load<Sprite>(type == PickupType.Health
+            ? "RetroPixel/HealthPickup"
+            : "RetroPixel/RapidFirePickup");
+        if (retroSprite != null)
         {
-            sprite.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 1, 1), new Vector2(.5f, .5f));
+            sprite.sprite = retroSprite;
+            sprite.color = Color.white;
         }
-        sprite.color = type == PickupType.Health ? new Color(.2f, 1f, .3f) : new Color(1f, .75f, .15f);
+        else
+        {
+            if (sprite.sprite == null)
+            {
+                sprite.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 1, 1), new Vector2(.5f, .5f));
+            }
+            sprite.color = type == PickupType.Health ? new Color(.2f, 1f, .3f) : new Color(1f, .75f, .15f);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)

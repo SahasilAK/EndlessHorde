@@ -4,20 +4,28 @@ using System.Collections;
 [RequireComponent(typeof(Rigidbody2D), typeof(Health), typeof(SpriteRenderer))]
 public class ZombieAI : MonoBehaviour
 {
+    private const float HealthBarWidth = 0.4f;
+    private const float HealthBarHeight = 0.05f;
+    private static Sprite healthBarSprite;
+
     public enum Variant
     {
         Normal,
         FastWeak,
-        SlowTough
+        SlowTough,
+        Boss
     }
 
     [SerializeField] private float moveSpeed = 2f;
-    [SerializeField] private int touchDamage = 10;
+    [SerializeField] private int touchDamage = 1;
     [SerializeField] private float damageCooldown = 1f;
     [SerializeField, Range(0f, 1f)] private float pickupDropChance = 0.25f;
     [SerializeField] private Sprite normalSprite;
     [SerializeField] private Sprite fastSprite;
     [SerializeField] private Sprite toughSprite;
+    [SerializeField] private Sprite bossSprite;
+
+    public bool IsBoss { get; private set; }
 
     private Rigidbody2D body;
     private Health health;
@@ -27,6 +35,8 @@ public class ZombieAI : MonoBehaviour
     private Color variantTint = Color.white;
     private Coroutine damageFlash;
     private int previousHealth;
+    private Transform healthBar;
+    private Transform healthBarFill;
 
     public void SetSpeedMultiplier(float multiplier)
     {
@@ -50,8 +60,20 @@ public class ZombieAI : MonoBehaviour
                 variantTint = new Color(.65f, .55f, .9f);
                 if (toughSprite != null) sprite.sprite = toughSprite;
                 break;
+            case Variant.Boss:
+                IsBoss = true;
+                moveSpeed = 0.8f;
+                touchDamage = 2;
+                health.SetMaxHealth(30);
+                variantTint = new Color(1f, .3f, .25f);
+                if (bossSprite != null) sprite.sprite = bossSprite;
+                else if (toughSprite != null) sprite.sprite = toughSprite;
+                transform.localScale = Vector3.one * 2f;
+                break;
             default:
+                IsBoss = false;
                 moveSpeed = 2f;
+                touchDamage = 1;
                 health.SetMaxHealth(3);
                 variantTint = Color.white;
                 if (normalSprite != null) sprite.sprite = normalSprite;
@@ -59,20 +81,24 @@ public class ZombieAI : MonoBehaviour
         }
         sprite.color = variantTint;
         previousHealth = health.Current;
+        UpdateHealthBar();
+    }
+
+    public void ConfigureBoss(int wave)
+    {
+        ConfigureVariant(Variant.Boss);
+        health.SetMaxHealth(25 + wave * 10);
     }
 
     private void Awake()
     {
         body = GetComponent<Rigidbody2D>();
         health = GetComponent<Health>();
+        gameManager = FindAnyObjectByType<GameManager>();
         previousHealth = health.Current;
         health.Died += OnDied;
         health.Changed += OnHealthChanged;
-    }
-
-    private void Start()
-    {
-        gameManager = FindAnyObjectByType<GameManager>();
+        CreateHealthBar();
     }
 
     private void FixedUpdate()
@@ -88,6 +114,15 @@ public class ZombieAI : MonoBehaviour
         transform.up = direction;
     }
 
+    private void LateUpdate()
+    {
+        if (healthBar != null)
+        {
+            healthBar.position = transform.position + Vector3.up * 0.22f;
+            healthBar.rotation = Quaternion.identity;
+        }
+    }
+
     private void OnCollisionStay2D(Collision2D collision)
     {
         if (Time.time < nextDamageTime)
@@ -95,11 +130,11 @@ public class ZombieAI : MonoBehaviour
             return;
         }
 
-        Health playerHealth = collision.collider.GetComponent<Health>();
-        if (playerHealth != null && collision.collider.GetComponent<PlayerController>() != null)
+        PlayerController player = collision.collider.GetComponent<PlayerController>();
+        if (player != null)
         {
             nextDamageTime = Time.time + damageCooldown;
-            playerHealth.TakeDamage(touchDamage);
+            player.TakeDamage(touchDamage);
         }
     }
 
@@ -110,7 +145,16 @@ public class ZombieAI : MonoBehaviour
             gameManager.AddScore(10);
             gameManager.PlayZombieDeathSound();
         }
-        if (Random.value < pickupDropChance)
+        float dropChance = pickupDropChance;
+        if (gameManager != null && gameManager.Player != null)
+        {
+            PlayerController player = gameManager.Player.GetComponent<PlayerController>();
+            if (player != null)
+            {
+                dropChance += player.PickupDropBonus;
+            }
+        }
+        if (Random.value < Mathf.Clamp01(dropChance))
         {
             DropPickup();
         }
@@ -119,6 +163,7 @@ public class ZombieAI : MonoBehaviour
 
     private void OnHealthChanged(Health changedHealth)
     {
+        UpdateHealthBar();
         if (changedHealth.Current < previousHealth && !changedHealth.IsDead)
         {
             gameManager.PlayHitSound();
@@ -129,6 +174,48 @@ public class ZombieAI : MonoBehaviour
             damageFlash = StartCoroutine(FlashOnDamage());
         }
         previousHealth = changedHealth.Current;
+    }
+
+    private void CreateHealthBar()
+    {
+        if (healthBarSprite == null)
+        {
+            healthBarSprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
+        }
+
+        GameObject bar = new GameObject("Health Bar");
+        healthBar = bar.transform;
+        healthBar.SetParent(transform, false);
+
+        GameObject background = new GameObject("Background");
+        background.transform.SetParent(healthBar, false);
+        background.transform.localScale = new Vector3(HealthBarWidth, HealthBarHeight, 1f);
+        SpriteRenderer backgroundRenderer = background.AddComponent<SpriteRenderer>();
+        backgroundRenderer.sprite = healthBarSprite;
+        backgroundRenderer.color = new Color(0.12f, 0.12f, 0.12f, 0.95f);
+        backgroundRenderer.sortingOrder = 5;
+
+        GameObject fill = new GameObject("Fill");
+        healthBarFill = fill.transform;
+        healthBarFill.SetParent(healthBar, false);
+        SpriteRenderer fillRenderer = fill.AddComponent<SpriteRenderer>();
+        fillRenderer.sprite = healthBarSprite;
+        fillRenderer.sortingOrder = 6;
+        UpdateHealthBar();
+    }
+
+    private void UpdateHealthBar()
+    {
+        if (healthBarFill == null)
+        {
+            return;
+        }
+
+        float healthRatio = Mathf.Clamp01((float)health.Current / health.Max);
+        float fillWidth = (HealthBarWidth - 0.02f) * healthRatio;
+        healthBarFill.localScale = new Vector3(fillWidth, HealthBarHeight * 0.6f, 1f);
+        healthBarFill.localPosition = new Vector3(-HealthBarWidth * 0.5f + 0.01f + fillWidth * 0.5f, 0f, 0f);
+        healthBarFill.GetComponent<SpriteRenderer>().color = Color.Lerp(Color.red, Color.green, healthRatio);
     }
 
     private IEnumerator FlashOnDamage()
